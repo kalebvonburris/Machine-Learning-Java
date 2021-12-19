@@ -4,9 +4,10 @@ A feed-through network structure designed in Java.
 This project consists of two files:
 - NeuralNetwork.java
 - Neuron.java
-These work in tandem, and should be able to provide for most tasks a FFN would require - including backpropgation.
 
-## Setting Up a Neural Netowrk
+These work in tandem, and should be able to provide for most tasks an FFN would require - including backpropagation.
+
+## Setting Up a Neural Network
 In order to set up a Neural Network, create an instance of the NeuralNetwork class, providing the number of inputs for the NN, the number of outputs, the number of hidden layers, an int[] array specifying the size of each hidden layer, a double for the learning rate, and a double for the momentum.
 ```java
 NeuralNetwork nn = new NeuralNetwork(2, 1, 1, new int[] {4}, 0.5, 0.9);
@@ -15,11 +16,11 @@ Then, initialize the NN.
 ```java
 nn.initialize();
 ```
-Of note: If you wish to set the specific activation type for a layer of neurons, call setLayerActivation after the NeuralNetwork is initialized;
+Of note: If you wish to set the specific activation type for a layer of neurons, call setLayerActivation() after the NeuralNetwork is initialized.
 ```java
 nn.setLayerActivation(int layer, int activationFunction);
 ```
-Otherwise, the NN with have hidden neurons use the ReLU activation function, and outputs use an efficient Sigmoid approximate (x / 1 + abs(x)).
+Otherwise, the NN's hidden neurons use the ReLU activation function and outputs use an efficient Sigmoid approximate (x / 1 + abs(x)).
 
 ## Setting Inputs
 Use the setInputs(double[] inputs) method to set the value of the input layer's neurons.
@@ -28,7 +29,7 @@ nn.setInputs(new double[] {random.nextInt(2), random.nextInt(2)};
 ```
 
 ## Forward and Back Propagation
-Once a NeuralNetwork has been initialized and had inputs set, use the calculate function to perform a forward propagation through the network - this is not necessary if you intend to then call the backProp(double[] expectedOutput) method.
+Once a NeuralNetwork has been initialized and had inputs set, use the calculate() function to perform a forwards propagation through the network - this is not necessary if you intend to call the backProp() method.
 ```java
 nn.calculate();
 nn.backProp(expectedOutput);

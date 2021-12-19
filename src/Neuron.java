@@ -37,9 +37,9 @@ public class Neuron {
      */
     public void calculate() {
         // Including out bias here, which is out biasWeight * 1.0.
-        double sum = 0;
+        double sum = biasWeight;
         for (int i = 0; i < lastLayer.length; i++) {
-            sum += (lastLayer[i].value * weights[i]) + biasWeight;
+            sum += (lastLayer[i].value * weights[i]);
         }
         value = doFunction(sum);
         derivative = getDerivative(value);

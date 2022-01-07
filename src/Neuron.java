@@ -1,4 +1,3 @@
-import java.util.Arrays;
 import java.util.Random;
 
 public class Neuron {
@@ -6,7 +5,7 @@ public class Neuron {
     private Neuron[] lastLayer;
     // The weights to the next layer of neurons.
     public double[] weights;
-    // The weight for a 1.0 bias, we'll just add this to out sum when we call calculate().
+    // The weight for a 1.0 bias, we'll just add this to our sum when we call calculate().
     public double biasWeight;
     // The value of the current neuron.
     public double value;
@@ -18,6 +17,7 @@ public class Neuron {
     public double derivative;
     // The previous weight change.
     public double[] prevChange;
+    // The previous change to our bias.
     public double prevBiasChange;
 
     /**
@@ -33,15 +33,38 @@ public class Neuron {
     }
 
     /**
+     * Initializes a copy of the neuron. Do not initialize if you wish to keep the weights the same.
+     */
+    public Neuron(Neuron parentNeuron, Neuron[] lastLayer) {
+        this.activationFunction = parentNeuron.activationFunction;
+        this.lastLayer = lastLayer;
+        weights = new double[lastLayer.length];
+        prevChange = new double[lastLayer.length];
+
+        for (int i = 0; i < lastLayer.length; i++) {
+            weights[i] = parentNeuron.weights[i];
+            prevChange[i] = parentNeuron.prevChange[i];
+        }
+
+        biasWeight = parentNeuron.biasWeight;
+
+        Random random = new Random();
+
+        error = parentNeuron.error;
+        derivative = parentNeuron.derivative;
+        prevBiasChange = parentNeuron.prevBiasChange;
+    }
+
+    /**
      * Pushes the current value to the next layer of neurons, according to the activation function of those connections.
      */
     public void calculate() {
-        // Including out bias here, which is out biasWeight * 1.0.
+        // Including our bias here, which is our biasWeight * 1.0.
         double sum = biasWeight;
         for (int i = 0; i < lastLayer.length; i++) {
             sum += (lastLayer[i].value * weights[i]);
         }
-        value = doFunction(sum);
+        value = doFunction(sum );
         derivative = getDerivative(value);
     }
 
@@ -65,7 +88,7 @@ public class Neuron {
     }
 
     private double linearDerive(double sum) {
-        if (sum > 0) return sum;
+        if (sum > 0) return 1;
         return 0;
     }
 
@@ -97,7 +120,7 @@ public class Neuron {
      * @param value The value to be altered.
      * @return Roughly equivalent to a sigmoid of <code>value</code>.
      */
-    private double sigmoid(double value) {
+    public static double sigmoid(double value) {
         return 0.5 * (value / (1 + Math.abs(value))) + 0.5;
     }
 
@@ -118,7 +141,7 @@ public class Neuron {
     }
 
     // Setters
-    public void setNextLayer(Neuron[] nextLayer) {this.lastLayer = nextLayer;}
+    public void setLastLayer(Neuron[] lastLayer) {this.lastLayer = lastLayer;}
     public void setWeights(double[] weights) {this.weights = weights;}
     public void setActivationFunction(int activationFunction) {this.activationFunction = activationFunction;}
     // Getters

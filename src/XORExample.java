@@ -3,7 +3,7 @@ import java.util.Random;
 public class XORExample {
     public static void main(String[] args) throws Exception {
         // Create and initialize the NeuralNetwork.
-        NeuralNetwork nn = new NeuralNetwork(2, 1, 1, new int[] {4}, 0.4, 0.6);
+        NeuralNetwork nn = new NeuralNetwork(2, 1, 1, new int[] {4}, 0.1, 0.9);
         nn.initialize();
 
         // Create variables to test the network.
@@ -19,7 +19,7 @@ public class XORExample {
         Random random = new Random();
 
         // Loop until loss is acceptable.
-        while (loss > 0.01) {
+        while (loss > 0.001) {
             // Loop for sessionLength epochs and get the average loss across them.
             loss = 0;
             avEpochTime = 0;
@@ -34,11 +34,8 @@ public class XORExample {
                 else
                     expectedOutputs[0] = 0.0;
 
-                // Set inputs for the NN.
-                nn.setInputs(inputs);
-                // Perform a back propagation, the method calls calculate(), so we don't need to call it ourselves.
-                // This also means that we don't have to provide it with its own outputs.
-                nn.backProp(expectedOutputs);
+                // Perform a backPropagation.
+                nn.backProp(inputs, expectedOutputs);
                 // Sum our loss.
                 loss += Math.abs(nn.getOutputs()[0] - expectedOutputs[0]) / sessionLength;
                 avEpochTime += (System.nanoTime() - epochStartTime) / sessionLength;
@@ -46,7 +43,8 @@ public class XORExample {
             // Increment epochs to keep track of how many have been performed.
             epochs += sessionLength;
             // Print a debugging statement.
-            System.out.printf("Epochs: %5d | Loss: %6.4f | Time to complete: %6.0fns or %.4fms\n", epochs, loss, avEpochTime, avEpochTime / 1000000.0);
+            System.out.printf("Epochs: %5d | Loss: %6.4f | Average Time per Epoch: %6.0fns or %.4fms\n",
+                    epochs, loss, avEpochTime, avEpochTime / 1000000.0);
         }
         // Perform a few example XOR statements.
         for (int i = 0; i < 10; i++) {
@@ -61,6 +59,7 @@ public class XORExample {
             // Print out the XOR.
             System.out.printf("XOR Operation: %.0f XOR %.0f == %3.2f\n", inputs[0], inputs[1], outputs[0]);
         }
+        // Print out our time to complete the training process.
         double diffTime = System.nanoTime() - startTime;
         System.out.printf("\nTime to complete for total training and example set: %.0fns or %.2fms\n", diffTime, diffTime / 1000000.0);
     }

@@ -19,7 +19,7 @@ public class XORExample {
         Random random = new Random();
 
         // Loop until loss is acceptable.
-        while (loss > 0.001) {
+        while (loss > 0.01) {
             // Loop for sessionLength epochs and get the average loss across them.
             loss = 0;
             avEpochTime = 0;

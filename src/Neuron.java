@@ -19,6 +19,8 @@ public class Neuron {
     public double[] prevChange;
     // The previous change to our bias.
     public double prevBiasChange;
+    // The current learning rate.
+    public double learningRate;
 
     /**
      * Initializes the Neuron.
@@ -27,9 +29,10 @@ public class Neuron {
      *                           2 - Sigmoid
      *                           3 - None
      */
-    public Neuron(int activationFunction) {
+    public Neuron(int activationFunction, double learningRate) {
         this.activationFunction = activationFunction;
         lastLayer = new Neuron[0];
+        this.learningRate = learningRate;
     }
 
     /**
@@ -40,6 +43,7 @@ public class Neuron {
         this.lastLayer = lastLayer;
         weights = new double[lastLayer.length];
         prevChange = new double[lastLayer.length];
+        learningRate = parentNeuron.learningRate;
 
         for (int i = 0; i < lastLayer.length; i++) {
             weights[i] = parentNeuron.weights[i];
@@ -47,8 +51,6 @@ public class Neuron {
         }
 
         biasWeight = parentNeuron.biasWeight;
-
-        Random random = new Random();
 
         error = parentNeuron.error;
         derivative = parentNeuron.derivative;
@@ -82,12 +84,12 @@ public class Neuron {
         };
     }
 
-    private double sigmoidDerive(double sum) {
+    public static double sigmoidDerive(double sum) {
         double x = 1 + Math.abs(sum);
         return 1 / (2 * (x * x));
     }
 
-    private double linearDerive(double sum) {
+    public static double linearDerive(double sum) {
         if (sum > 0) return 1;
         return 0;
     }
@@ -144,6 +146,7 @@ public class Neuron {
     public void setLastLayer(Neuron[] lastLayer) {this.lastLayer = lastLayer;}
     public void setWeights(double[] weights) {this.weights = weights;}
     public void setActivationFunction(int activationFunction) {this.activationFunction = activationFunction;}
+
     // Getters
     public Neuron[] getNextLayer() {return lastLayer;}
     public double[] getWeights() {return weights;}

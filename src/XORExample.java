@@ -3,7 +3,7 @@ import java.util.Random;
 public class XORExample {
     public static void main(String[] args) throws Exception {
         // Create and initialize the NeuralNetwork.
-        NeuralNetwork nn = new NeuralNetwork(2, 1, 1, new int[] {4}, 0.1, 0.9);
+        NeuralNetwork nn = new NeuralNetwork(2, 1, 1, new int[] {4}, 0.02);
         nn.initialize();
 
         // Create variables to test the network.
@@ -19,7 +19,7 @@ public class XORExample {
         Random random = new Random();
 
         // Loop until loss is acceptable.
-        while (loss > 0.01) {
+        while (loss > 0.05) {
             // Loop for sessionLength epochs and get the average loss across them.
             loss = 0;
             avEpochTime = 0;
@@ -37,13 +37,13 @@ public class XORExample {
                 // Perform a backPropagation.
                 nn.backProp(inputs, expectedOutputs);
                 // Sum our loss.
-                loss += Math.abs(nn.getOutputs()[0] - expectedOutputs[0]) / sessionLength;
+                loss += Math.pow(nn.getOutputs()[0] - expectedOutputs[0], 2) / sessionLength;
                 avEpochTime += (System.nanoTime() - epochStartTime) / sessionLength;
             }
             // Increment epochs to keep track of how many have been performed.
             epochs += sessionLength;
             // Print a debugging statement.
-            System.out.printf("Epochs: %5d | Loss: %6.4f | Average Time per Epoch: %6.0fns or %.4fms\n",
+            System.out.printf("Epochs: %5d | MSE: %6.4f | Average Time per Epoch: %6.0fns or %.4fms\n",
                     epochs, loss, avEpochTime, avEpochTime / 1000000.0);
         }
         // Perform a few example XOR statements.

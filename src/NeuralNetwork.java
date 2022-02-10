@@ -4,7 +4,6 @@ public class NeuralNetwork {
     public Neuron[][] neurons;
     public final int layers;
     public double learningRate;
-    public double momentum;
     private double errorSum;
 
     /**
@@ -13,9 +12,8 @@ public class NeuralNetwork {
      * @param hiddenLayers The number of hidden layers.
      * @param layerNeurons An integer array specifying the number of neurons in each hidden layer.
      */
-    public NeuralNetwork(int inputs, int outputs, int hiddenLayers, int[] layerNeurons, double learningRate, double momentum) {
+    public NeuralNetwork(int inputs, int outputs, int hiddenLayers, int[] layerNeurons, double learningRate) {
         this.learningRate = learningRate;
-        this.momentum = momentum;
         // Initialization of neurons.
         layers = 2 + hiddenLayers;
         neurons = new Neuron[layers][];
@@ -26,20 +24,20 @@ public class NeuralNetwork {
         // Input layer initialization.
         neurons[0] = new Neuron[inputs];
         for (int i = 0; i < inputs; i++) {
-            neurons[0][i] = new Neuron(3);
+            neurons[0][i] = new Neuron(3, learningRate);
         }
 
         // Output layer initialization.
         neurons[layers - 1] = new Neuron[outputs];
         for (int i = 0; i < outputs; i++) {
-            neurons[layers - 1][i] = new Neuron(2);
+            neurons[layers - 1][i] = new Neuron(2, learningRate);
         }
 
         // Hidden layer initialization.
         for (int i = 1; i < layers - 1; i++) {
             neurons[i] = new Neuron[layerNeurons[i - 1]];
             for (int j = 0; j < layerNeurons[i - 1]; j++) {
-                neurons[i][j] = new Neuron(1);
+                neurons[i][j] = new Neuron(1, learningRate);
             }
         }
     }
@@ -57,6 +55,7 @@ public class NeuralNetwork {
                 neurons[layer][neuron].biasWeight = parent.neurons[layer][neuron].biasWeight;
                 for (int weight = 0; weight < neurons[layer][neuron].weights.length; weight++) {
                     neurons[layer][neuron].weights[weight] = parent.neurons[layer][neuron].weights[weight];
+                    neurons[layer][neuron].learningRate = parent.neurons[layer][neuron].learningRate;
                 }
             }
         }
@@ -68,7 +67,6 @@ public class NeuralNetwork {
      */
     public NeuralNetwork(NeuralNetwork neuralNetwork) {
         learningRate = neuralNetwork.learningRate;
-        momentum = neuralNetwork.momentum;
         this.errorSum = neuralNetwork.errorSum;
 
         // Get the parent network to copy from.
@@ -83,7 +81,7 @@ public class NeuralNetwork {
         // Initialize the new network's inputs.
         neurons[0] = new Neuron[parentNetwork[0].length];
         for (int i = 0; i < neurons[0].length; i++) {
-            neurons[0][i] = new Neuron(3);
+            neurons[0][i] = new Neuron(3, learningRate);
         }
 
         // Loops for each layer except the output layer.
@@ -166,7 +164,8 @@ public class NeuralNetwork {
         // Calculate input error.
         Neuron[] layer = neurons[neurons.length - 1];
         for (int i = 0; i < layer.length; i++) {
-            layer[i].error = layer[i].derivative * (layer[i].value - expectedOutput[i]);
+            layer[i].error = layer[i].derivative * (expectedOutput[i] - layer[i].value);
+            layer[i].learningRate = layer[i].getDerivative(Math.abs(expectedOutput[i] - layer[i].value));
         }
 
         // Calculate hidden layer error.
@@ -174,11 +173,14 @@ public class NeuralNetwork {
             layer = neurons[i];
             // Compute error of layer's neurons.
             for (int j = 0; j < layer.length; j++) {
-                double error = 0.0;
+                double error = 0;
                 for (int neuron = 0; neuron < neurons[i + 1].length; neuron++) {
                     error += neurons[i + 1][neuron].weights[j] * neurons[i + 1][neuron].error;
                 }
+
                 layer[j].error = error * layer[j].derivative;
+
+                layer[j].learningRate = layer[j].getDerivative((1.0 / neurons[i + 1].length) * error);
             }
         }
 
@@ -188,13 +190,9 @@ public class NeuralNetwork {
             layer = neurons[i];
             for (Neuron neuron : layer) {
                 // Updating our bias.
-                temp = neuron.prevBiasChange;
-                neuron.prevBiasChange = (learningRate * neuron.error) + (momentum * temp);
-                neuron.biasWeight -= neuron.prevBiasChange;
+                neuron.biasWeight += neuron.learningRate * neuron.error;
                 for (int weight = 0; weight < neuron.weights.length; weight++) {
-                    temp = neuron.prevChange[weight];
-                    neuron.prevChange[weight] = (learningRate * neuron.error * neurons[i - 1][weight].value) + (momentum * temp);
-                    neuron.weights[weight] -= neuron.prevChange[weight];
+                    neuron.weights[weight] += neuron.learningRate * neuron.error * neurons[i - 1][weight].value;
                 }
             }
         }
@@ -224,7 +222,7 @@ public class NeuralNetwork {
         // Calculate input error.
         Neuron[] layer = neurons[neurons.length - 1];
         for (int i = 0; i < layer.length; i++) {
-            layer[i].error += layer[i].derivative * (layer[i].value - expectedOutput[i]);
+            layer[i].error += layer[i].derivative * (expectedOutput[i] - layer[i].value);
         }
 
         // Calculate hidden layer error.
@@ -247,7 +245,7 @@ public class NeuralNetwork {
      */
     public void backPropSumError() {
         if (errorSum == 0)
-            errorSum = 1.0;
+            return;
         // Update weights.
         double temp;
         Neuron[] layer;
@@ -255,13 +253,9 @@ public class NeuralNetwork {
             layer = neurons[i];
             for (Neuron neuron : layer) {
                 // Updating our bias.
-                temp = neuron.prevBiasChange;
-                neuron.prevBiasChange = ((learningRate * neuron.error) + (momentum * temp) ) / errorSum;
-                neuron.biasWeight -= neuron.prevBiasChange;
+                neuron.biasWeight += (learningRate * neuron.error) / errorSum;
                 for (int weight = 0; weight < neuron.weights.length; weight++) {
-                    temp = neuron.prevChange[weight];
-                    neuron.prevChange[weight] = ((learningRate * neuron.error * neurons[i - 1][weight].value) + (momentum * temp)) / errorSum;
-                    neuron.weights[weight] -= neuron.prevChange[weight];
+                    neuron.weights[weight] += (learningRate * neuron.error * neurons[i - 1][weight].value) / errorSum;
                 }
                 neuron.error = 0.0;
             }
@@ -305,7 +299,6 @@ public class NeuralNetwork {
             bw.newLine();
         }
         bw.close();
-
     }
 
     /**
@@ -345,12 +338,12 @@ public class NeuralNetwork {
                 for (int cursor = 0; cursor < neuron[i].length(); cursor++) {
 
                     if (layerIndex == 0) {
-                        neurons[layerIndex][i] = new Neuron(Integer.parseInt(neuron[i].substring(0, neuron[i].indexOf(","))));
+                        neurons[layerIndex][i] = new Neuron(Integer.parseInt(neuron[i].substring(0, neuron[i].indexOf(","))), learningRate);
                         neurons[layerIndex][i].biasWeight = Double.parseDouble(neuron[i].substring(neuron[i].indexOf(",") + 1));
                     }
 
                     else {
-                        neurons[layerIndex][i] = new Neuron(Integer.parseInt(neuron[i].substring(0, neuron[i].indexOf(","))));
+                        neurons[layerIndex][i] = new Neuron(Integer.parseInt(neuron[i].substring(0, neuron[i].indexOf(","))), learningRate);
                         neuron[i] = neuron[i].substring(neuron[i].indexOf(",") + 1);
                         neurons[layerIndex][i].biasWeight = Double.parseDouble(neuron[i].substring(0, neuron[i].indexOf(",")));
                         neuron[i] = neuron[i].substring(neuron[i].indexOf(",") + 1);
